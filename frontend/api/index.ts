@@ -5,8 +5,11 @@
 // app.listen()) and forwards Vercel's WHATWG Request/Response into it.
 //
 // NOTE: This file is intentionally not type-checked by the frontend `tsc`
-// build (frontend/tsconfig.json only includes `src/`). Vercel's @vercel/node
-// bundler transpiles it directly.
+// build (frontend/tsconfig.json excludes `api/`). Vercel's @vercel/node
+// bundler (esbuild, platform=node) compiles it directly. The Express stack it
+// imports is available because the backend's runtime deps are mirrored into
+// frontend/package.json, so @vercel/node resolves them from
+// frontend/node_modules at bundle time.
 import app from "../../backend/src/app.js";
 
 export default async (req: any, res: any) => {
