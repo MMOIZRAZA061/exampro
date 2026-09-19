@@ -18,9 +18,10 @@ import app from "../backend/src/app.js";
 export default async function handler(req: any, res: any, ctx: any) {
     // ctx.query.path is an array of subpath segments (e.g. ["auth", "login"]).
     // Rebuild the full path the Express app expects after "/api".
-    const segments: string[] = ctx?.query?.path ?? [];
+    const segments: string[] = ctx?.query?.path || [];
     const subpath = segments.map((s) => decodeURIComponent(s)).join("/");
-    const targetPath = "/api" + (subpath ? "/" + subpath : "") + req.url?.split("?")[1] ?? "";
+    const queryStr: string | null = req.url ? req.url.split("?")[1] : null;
+    const targetPath = "/api" + (subpath ? "/" + subpath : "") + (queryStr ? "?" + queryStr : "");
 
     // Express middleware reads req.url; point it at the reconstructed path.
     req.url = targetPath;
