@@ -1,2 +1,0 @@
-x unknown or unexpected option: -e
-  Vercel CLI 59.23.2 accepts: --api, --cwd, --debug, --format, --global-config, --help, --json, --local-config, --logs, --no-color, --non-interactive, --scope, --team, --timeout, --token, --version, --wait.
