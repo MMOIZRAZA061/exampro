@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { env } from "../config/env.js";
+import { env, requireEnv } from "../config/env.js";
 
 export interface AuthUser {
     id: string;
@@ -18,7 +18,7 @@ declare global {
 }
 
 export function generateToken(payload: AuthUser): string {
-    return jwt.sign(payload, env.JWT_SECRET, {
+    return jwt.sign(payload, requireEnv("JWT_SECRET"), {
         expiresIn: env.JWT_EXPIRES_IN,
     } as jwt.SignOptions);
 }
@@ -33,7 +33,8 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     }
 
     try {
-        const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+        const secret = requireEnv("JWT_SECRET");
+        const decoded = jwt.verify(token, secret) as any;
         req.user = {
             id: decoded.id,
             email: decoded.email,
@@ -41,7 +42,12 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
             fullName: decoded.fullName,
         };
         next();
-    } catch (err) {
+    } catch (err: any) {
+        // Missing JWT_SECRET on the server -> treat as a 500, not a 401,
+        // so the root cause is obvious rather than a fake "invalid token".
+        if (err instanceof Error && /JWT_SECRET/i.test(err.message)) {
+            return res.status(500).json({ error: "Server misconfigured: JWT_SECRET missing" });
+        }
         return res.status(401).json({ error: "Invalid or expired token" });
     }
 }

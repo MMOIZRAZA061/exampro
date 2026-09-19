@@ -46,7 +46,19 @@ export default function LoginPage() {
             await login(email, password);
             showToast("Logged in successfully");
         } catch (err: any) {
-            setError(err.response?.data?.error || "Login failed. Check your credentials.");
+            // err.response is present  -> the backend answered, so surface its
+            // real error message (bad creds, DB down, etc.).
+            // err.response is absent   -> the request never reached the backend
+            // (network/CORS/function error). Say so instead of blaming creds.
+            if (err.response) {
+                setError(err.response.data?.error || "Login failed. Please try again.");
+            } else if (err.code === "ERR_NETWORK" || err.request) {
+                setError(
+                    "Could not reach the server. The backend may be starting up — please wait a moment and try again."
+                );
+            } else {
+                setError("Login failed. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
