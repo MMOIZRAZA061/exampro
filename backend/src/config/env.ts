@@ -1,7 +1,14 @@
 import { config } from "dotenv";
 import path from "path";
 
-config({ path: path.resolve(__dirname, "../../.env") });
+// Load a local .env if one exists (dev). On Vercel this file is absent, but
+// the DATABASE_URL / JWT_SECRET values are injected directly as process env
+// vars, so the optional load below is safe.
+try {
+    config({ path: path.resolve(__dirname, "../../.env") });
+} catch {
+    // no local .env — rely on injected environment variables (Vercel)
+}
 
 const required: Record<string, string> = {
     DATABASE_URL: process.env.DATABASE_URL ?? "",

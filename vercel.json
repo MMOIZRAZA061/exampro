@@ -1,12 +1,26 @@
 {
-    "framework": "vite",
     "version": 2,
-    "buildCommand": "npm run build",
-    "outputDirectory": "dist",
-    "rewrites": [
+    "builds": [
         {
-            "source": "/((?!api|assets|manifest.json|favicon.ico|index.html|vite.svg).*)",
-            "destination": "/index.html"
+            "src": "frontend/package.json",
+            "use": "vite"
+        },
+        {
+            "src": "backend/api/index.ts",
+            "use": "@vercel/node",
+            "config": {
+                "maxDuration": 60
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/index"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ]
 }
