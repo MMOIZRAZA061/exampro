@@ -1,16 +1,19 @@
 {
+    "version": 2,
     "builds": [
         {
             "src": "frontend/package.json",
             "use": "@vercel/static-build",
             "config": {
+                "rootDirectory": "frontend",
                 "outputDirectory": "dist"
             }
         },
         {
-            "src": "backend/api/index.ts",
+            "src": "backend/package.json",
             "use": "@vercel/node",
             "config": {
+                "rootDirectory": "backend",
                 "maxDuration": 60,
                 "memory": 1024
             }
