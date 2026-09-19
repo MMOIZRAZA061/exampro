@@ -1,5 +1,7 @@
 {
     "version": 2,
+    "outputDirectory": "dist",
+    "buildCommand": "npm run build",
     "rewrites": [
         {
             "source": "/((?!api|assets|manifest.json|favicon.ico|index.html|vite.svg).*)",

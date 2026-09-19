@@ -1,28 +1,26 @@
 {
-    "services": {
-        "frontend": {
-            "root": "frontend",
-            "framework": "vite"
+    "builds": [
+        {
+            "src": "frontend/package.json",
+            "use": "@vercel/static-build"
         },
-        "backend": {
-            "root": "backend",
-            "entrypoint": "api/index.ts"
+        {
+            "src": "backend/api/index.ts",
+            "use": "@vercel/node",
+            "config": {
+                "maxDuration": 60,
+                "memory": 1024
+            }
         }
-    },
-    "rewrites": [
+    ],
+    "routes": [
         {
-            "source": "/api(/.*)?",
-            "destination": {
-                "type": "service",
-                "service": "backend"
-            }
+            "src": "/api/(.*)",
+            "dest": "backend/api/index.ts"
         },
         {
-            "source": "/(.*)",
-            "destination": {
-                "type": "service",
-                "service": "frontend"
-            }
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ]
 }
