@@ -10,7 +10,7 @@
 // backend's runtime deps (express, pg, cors, ...) are mirrored into
 // frontend/package.json so @vercel/node resolves them from
 // frontend/node_modules at bundle time.
-import app from "../../backend/src/app.js";
+import app from "../backend/src/app.js";
 
 export default async (req: any, res: any) => {
     app(req, res);
