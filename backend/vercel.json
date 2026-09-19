@@ -1,4 +1,5 @@
 {
+    "version": 2,
     "functions": [
         {
             "path": "api/index.ts",
