@@ -1,26 +1,8 @@
 {
-    "version": 2,
-    "builds": [
+    "rewrites": [
         {
-            "src": "frontend/package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "dist": "frontend/dist"
-            }
-        },
-        {
-            "src": "frontend/api/index.ts",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/api/$1"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/index.html"
+            "source": "/((?!assets|manifest.json|favicon.ico|index.html|vite.svg|api).*)",
+            "destination": "/index.html"
         }
     ]
 }
