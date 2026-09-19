@@ -5,9 +5,11 @@
 // Vercel returns its own 404 for them. This catch-all (`[...path]`) maps to
 // `/api/*` and forwards every subpath to the Express app.
 //
-// Vercel passes the matched subpath segments as `query.path` (an array), so
-// we reconstruct the real URL that Express expects (e.g. "/api/auth/login")
-// and hand Vercel's WHATWG Request/Response to the Express app.
+// The matched subpath is recovered from the incoming request: Vercel sets
+// `req.url` to the subpath (e.g. "health" or "auth/login") when the request
+// lands at /api/<subpath>. If that is empty, we fall back to the documented
+// `arg.path` / `query.path` array. The real Express URL is reconstructed as
+// "/api/<subpath>[?query]" and handed to the Express app.
 //
 // NOTE: Not type-checked by the frontend `tsc` build (frontend/tsconfig.json
 // excludes `api/`). Vercel's @vercel/node bundler compiles the source .ts
@@ -16,17 +18,39 @@
 import app from "../backend/src/app.js";
 
 export default async function handler(req: any, res: any, ctx: any) {
-    // ctx.query.path is an array of subpath segments (e.g. ["auth", "login"]).
-    // Rebuild the full path the Express app expects after "/api".
-    const segments: string[] = ctx?.query?.path || [];
-    const subpath = segments.map((s) => decodeURIComponent(s)).join("/");
-    const queryStr: string | null = req.url ? req.url.split("?")[1] : null;
-    const targetPath = "/api" + (subpath ? "/" + subpath : "") + (queryStr ? "?" + queryStr : "");
+    // 1) Best source of truth: req.url on a catch-all is the subpath
+    //    Vercel matched (e.g. "/health" or "/auth/login"), optionally with query.
+    let sub = "";
+    let query = "";
 
-    // Express middleware reads req.url; point it at the reconstructed path.
+    const rawUrl: string = req?.url || "";
+    const qsIdx = rawUrl.indexOf("?");
+    if (qsIdx >= 0) {
+        sub = rawUrl.slice(0, qsIdx);
+        query = rawUrl.slice(qsIdx + 1); // strip leading "?"
+    } else {
+        sub = rawUrl;
+    }
+
+    // Normalise: drop leading slash, join back under /api.
+    sub = sub.replace(/^\/+/, "");
+
+    // 2) Fallback: some Vercel builds pass the segments as arg.path / query.path.
+    if (!sub) {
+        const rawSegments: any =
+            ctx?.query?.path || req?.query?.path || (ctx && (ctx as any).path) || [];
+        const segments: string[] = Array.isArray(rawSegments) ? rawSegments : [];
+        sub = segments.map((s) => String(s)).join("/");
+    }
+
+    // 3) Reconstruct the full Express URL, e.g. "/api/health?x=1".
+    const targetPath =
+        "/api" + (sub ? "/" + sub : "") + (query ? "?" + query : "");
+
+    // Point Express at the reconstructed URL so its router matches /api/<sub>.
     req.url = targetPath;
+    (req as any).originalUrl = targetPath;
 
-    // Preserve the original request URL so the client-facing response still
-    // reflects the real location (Express uses req.url only for routing).
-    return app(req, res);
+    // Hand Vercel's WHATWG Request/Response straight into the Express app.
+    app(req, res);
 }
